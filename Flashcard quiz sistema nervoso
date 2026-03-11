@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Flashcard Sistema Nervoso</title>
+
+<style>
+
+body{
+font-family:Arial, sans-serif;
+background:#f4f6f8;
+margin:0;
+padding:20px;
+}
+
+h1{
+text-align:center;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+}
+
+.card{
+perspective:1000px;
+height:260px;
+cursor:pointer;
+}
+
+.card-inner{
+position:relative;
+width:100%;
+height:100%;
+transition:transform 0.6s;
+transform-style:preserve-3d;
+}
+
+.card.flipped .card-inner{
+transform:rotateY(180deg);
+}
+
+.card-face{
+position:absolute;
+width:100%;
+height:100%;
+backface-visibility:hidden;
+background:white;
+border-radius:10px;
+box-shadow:0 3px 8px rgba(0,0,0,0.15);
+padding:15px;
+display:flex;
+flex-direction:column;
+justify-content:center;
+}
+
+.card-back{
+transform:rotateY(180deg);
+}
+
+.question{
+font-weight:bold;
+margin-bottom:10px;
+}
+
+button{
+margin:4px 0;
+padding:6px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+.option{
+background:#e8edf2;
+}
+
+.option.correct{
+background:#9be39b;
+}
+
+.option.wrong{
+background:#f7a6a6;
+}
+
+.controls{
+margin-top:10px;
+}
+
+.explanation{
+display:none;
+font-size:13px;
+background:#eef2f7;
+padding:6px;
+margin-top:5px;
+border-radius:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Flashcard Sistema Nervoso</h1>
+
+<div class="grid" id="grid"></div>
+
+<script>
+
+const data = [
+{
+q:"Qual è il compito principale del sistema nervoso?",
+options:["Trasportare il sangue","Controllare e coordinare le attività del corpo","Digerire il cibo","Produrre ossigeno"],
+correct:1,
+exp:"Coordinare significa organizzare e controllare le attività del corpo."
+},
+{
+q:"In quante parti si divide il sistema nervoso?",
+options:["Due","Tre","Quattro","Cinque"],
+correct:0,
+exp:"Il sistema nervoso è diviso in due grandi sezioni."
+},
+{
+q:"Quali sono le due parti del sistema nervoso?",
+options:["Sistema respiratorio e digestivo","Sistema nervoso centrale e periferico","Sistema nervoso alto e basso","Sistema nervoso interno ed esterno"],
+correct:1,
+exp:"Il sistema nervoso centrale include cervello e midollo."
+},
+{
+q:"Da cosa è formato il sistema nervoso centrale?",
+options:["Cervello e midollo spinale","Nervi e muscoli","Ossa e muscoli","Cuore e polmoni"],
+correct:0,
+exp:"Il midollo spinale è un lungo fascio di nervi nella colonna vertebrale."
+},
+{
+q:"Da cosa è formato il sistema nervoso periferico?",
+options:["Ossa","Muscoli","Nervi","Ghiandole"],
+correct:2,
+exp:"I nervi collegano il cervello con il resto del corpo."
+},
+{
+q:"Qual è la cellula principale del sistema nervoso?",
+options:["Globulo rosso","Neurone","Cellula muscolare","Cellula ossea"],
+correct:1,
+exp:"Il neurone è la cellula che trasmette informazioni."
+},
+{
+q:"Quale parte del neurone riceve gli stimoli?",
+options:["Assone","Dendriti","Nucleo","Membrana"],
+correct:1,
+exp:"Gli stimoli sono segnali che arrivano da altre cellule."
+},
+{
+q:"Quale parte del neurone porta il segnale verso altre cellule?",
+options:["Assone","Dendriti","Nucleo","Sinapsi"],
+correct:0,
+exp:"L'assone è il prolungamento che trasporta il segnale."
+},
+{
+q:"I neuroni sensoriali servono a:",
+options:["Portare le informazioni dagli organi di senso al cervello","Muovere i muscoli","Produrre ormoni","Trasportare ossigeno"],
+correct:0,
+exp:"Gli organi di senso includono occhi, orecchie, pelle."
+},
+{
+q:"I neuroni motori servono a:",
+options:["Portare informazioni al cervello","Trasmettere impulsi dal cervello ai muscoli","Trasportare sangue","Produrre energia"],
+correct:1,
+exp:"Gli impulsi sono segnali elettrici che viaggiano nei nervi."
+},
+{
+q:"L’encefalo si trova:",
+options:["Nella pancia","Nel torace","Nel cranio","Nelle gambe"],
+correct:2,
+exp:"Il cranio è l'osso che protegge il cervello."
+},
+{
+q:"Quale parte dell’encefalo aiuta a mantenere l’equilibrio?",
+options:["Cervelletto","Midollo spinale","Cuore","Polmoni"],
+correct:0,
+exp:"Il cervelletto controlla equilibrio e coordinazione."
+},
+{
+q:"Cos’è un riflesso?",
+options:["Una risposta lenta e volontaria","Una risposta veloce e automatica","Un movimento del cuore","Un segnale chimico"],
+correct:1,
+exp:"Un riflesso è una risposta immediata del corpo."
+},
+{
+q:"Il sistema nervoso autonomo controlla:",
+options:["I movimenti volontari","Le funzioni automatiche del corpo","Solo la respirazione","Solo il movimento delle mani"],
+correct:1,
+exp:"Le funzioni automatiche includono battito cardiaco e digestione."
+},
+{
+q:"Il cervello fa parte di quale sistema?",
+options:["Sistema nervoso","Sistema respiratorio","Sistema digerente","Sistema scheletrico"],
+correct:0,
+exp:"Il cervello è l'organo principale del sistema nervoso."
+}
+];
+
+const grid = document.getElementById("grid");
+
+data.forEach((card,i)=>{
+
+let div = document.createElement("div");
+div.className="card";
+
+div.innerHTML=`
+<div class="card-inner">
+
+<div class="card-face">
+<div class="question">${card.q}</div>
+<div class="controls">
+<button onclick="speak(${i})">🔊 Play</button>
+<button onclick="stopVoice(event)">⏹ Stop</button>
+</div>
+</div>
+
+<div class="card-face card-back">
+
+<div class="answers">
+${card.options.map((o,index)=>
+`<button class="option" onclick="check(event,${i},${index})">${o}</button>`
+).join("")}
+</div>
+
+<button onclick="toggleExplanation(event,${i})">Spiegazione parole</button>
+<div class="explanation" id="exp${i}">${card.exp}</div>
+
+</div>
+
+</div>
+`;
+
+div.addEventListener("click",()=>div.classList.toggle("flipped"));
+
+grid.appendChild(div);
+
+});
+
+function check(e,cardIndex,optionIndex){
+
+e.stopPropagation();
+
+let card=document.querySelectorAll(".card")[cardIndex];
+let buttons=card.querySelectorAll(".option");
+
+buttons.forEach((b,i)=>{
+if(i===data[cardIndex].correct){
+b.classList.add("correct");
+}
+else if(i===optionIndex){
+b.classList.add("wrong");
+}
+});
+
+}
+
+let synth=window.speechSynthesis;
+
+function speak(i){
+
+let text=data[i].q+" "+data[i].options.join(". ");
+
+let utter=new SpeechSynthesisUtterance(text);
+utter.lang="it-IT";
+
+synth.speak(utter);
+
+}
+
+function stopVoice(e){
+e.stopPropagation();
+speechSynthesis.cancel();
+}
+
+function toggleExplanation(e,i){
+e.stopPropagation();
+let el=document.getElementById("exp"+i);
+el.style.display=el.style.display==="block"?"none":"block";
+}
+
+</script>
+
+</body>
+</html>
